@@ -10,6 +10,9 @@ from data_model.handbag import HandBag
 class MacysHandBagCrawler(scrapy.Spider):
     name = "macys_handbag_crawler"
 
+    def __init__(self):
+        self.url_prefix = "https://www.macys.com/"
+
     def start_requests(self):
         urls = [
             'https://www.macys.com/shop/handbags-accessories/handbags?id=27686&edge=hybrid',
@@ -19,6 +22,12 @@ class MacysHandBagCrawler(scrapy.Spider):
 
     def parse(self, response):
         for item in response.css("li.productThumbnailItem"):
-            bag = HandBag()
+            bag = HandBag(self.url_prefix)
             bag.parseFromWebContent(item)
-            yield bag.__dict__()
+            yield bag.__dict__
+        next_page = response.css("li.next-page div.icon-ui-chevron-right-gr-huge a::attr(href)").extract()
+        if next_page:
+            for page in next_page:
+                page_url = response.urljoin(self.url_prefix + '/' + page)
+                yield scrapy.Request(page_url, callback=self.parse)        
+        

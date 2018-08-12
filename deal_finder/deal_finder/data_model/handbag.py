@@ -2,7 +2,8 @@ import json
 import re
 
 class HandBag(object):
-    def __init__(self):
+    def __init__(self, url_prefix):
+        self.url_prefix = url_prefix
         self.brand = ''
         self.item_id = ''
         self.category_id = ''
@@ -22,7 +23,7 @@ class HandBag(object):
         identity = content.css("div.productThumbnail")
         self.item_id = content.css("div.productThumbnail::attr(id)").extract_first()
         if identity:
-            self.url = identity.css("div.productThumbnailImage").css("a::attr(href)").extract_first()
+            self.url = self.url_prefix + '/' + identity.css("div.productThumbnailImage").css("a::attr(href)").extract_first()
 
         if product_detail:
             #self.url = product_detail.css("a.tag::href")
