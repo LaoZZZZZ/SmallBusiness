@@ -1,5 +1,6 @@
 import json
 import re
+import sys
 
 class HandBag(object):
     def __init__(self, url_prefix):
@@ -26,14 +27,20 @@ class HandBag(object):
             self.url = self.url_prefix + '/' + identity.css("div.productThumbnailImage").css("a::attr(href)").extract_first()
 
         if product_detail:
-            #self.url = product_detail.css("a.tag::href")
-            actual_detail = json.loads(product_detail.css("script::text").extract_first())
-            if 'detail' in actual_detail:
-                detail = actual_detail['detail']
-                self.brand = detail['brand']
-                self.name = detail['name']
-                self.description = detail['description']
-                self.review_stats = detail['reviewStatistics']
+            try:
+                text_selector = product_detail.css("script::text")
+                if text_selector:
+                    actual_detail = json.loads(text_selector.extract_first())
+                    if 'detail' in actual_detail:
+                        detail = actual_detail['detail']
+                        self.brand = detail['brand']
+                        self.name = detail['name']
+                        self.description = detail['description']
+                        self.review_stats = detail['reviewStatistics']
+            except Exception as ex:
+                print(text_selector)
+                print(ex)
+                sys.exit()
         price_info = content.css("div.priceInfo")
         if price_info:
             special_offers = price_info.css("div.specialOffers.span.priceTypeText::text")
@@ -61,5 +68,5 @@ class HandBag(object):
                     else:
                         self.discount = re.search('\d*\.*\d*', p).group(0)
             else:
-                self.current_price = regular_price
+                self.current_price = self.regular_price
                 self.discount = 0
